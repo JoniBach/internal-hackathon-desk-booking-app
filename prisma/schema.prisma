@@ -10,10 +10,11 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  // Pooled connection used by the app at runtime.
-  url      = env("DATABASE_URL")
-  // Direct connection used by `prisma migrate` (Neon needs the non-pooled URL).
-  directUrl = env("DIRECT_URL")
+  // Pooled connection used by the app at runtime (PgBouncer-safe for Prisma).
+  // Auto-injected by the Neon / Vercel Postgres integration.
+  url      = env("POSTGRES_PRISMA_URL")
+  // Direct (non-pooled) connection used by `prisma migrate`.
+  directUrl = env("POSTGRES_URL_NON_POOLING")
 }
 
 model Premise {

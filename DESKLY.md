@@ -26,7 +26,7 @@ Requires **Node 18+** (built on Node 24) and **Docker** (for the local Postgres)
 
 ```bash
 docker compose up -d        # start local Postgres (matches Neon/Vercel)
-cp .env.example .env        # DATABASE_URL + DIRECT_URL — defaults match docker-compose
+cp .env.example .env        # connection strings — defaults match docker-compose
 npm install                 # also runs `prisma generate`
 npx prisma migrate deploy   # create the schema
 npm run db:seed             # seed Mercator London + ~4 weeks of history
@@ -37,27 +37,30 @@ npm run dev                 # http://localhost:3000
 > clock so today's "reserved, not yet checked in" desk always has a live
 > check-in window.
 
-No Docker? Point `DATABASE_URL` / `DIRECT_URL` in `.env` at any Postgres you
-like (a free Neon database works) and skip `docker compose up`.
+No Docker? Point `POSTGRES_PRISMA_URL` / `POSTGRES_URL_NON_POOLING` in `.env` at
+any Postgres you like (a free Neon database works) and skip `docker compose up`.
 
 ## Deploy to Vercel
 
 The app is built for Vercel + a serverless Postgres (Neon / Vercel Postgres).
+The Prisma datasource reads `POSTGRES_PRISMA_URL` (pooled, runtime) and
+`POSTGRES_URL_NON_POOLING` (direct, migrations) — the exact names the
+Neon / Vercel Postgres integration injects, so there are **no env vars to set
+by hand**.
 
-1. **Provision a database.** In the Vercel dashboard: **Storage → Create →
-   Postgres** (or create a Neon database and copy its connection strings).
-2. **Set environment variables** on the Vercel project (Settings → Environment
-   Variables):
-   - `DATABASE_URL` — the **pooled** connection string (host contains
-     `-pooler`). Used by the app at runtime.
-   - `DIRECT_URL` — the **direct** connection string. Used by `prisma migrate`.
-3. **Deploy.** Import the repo into Vercel and deploy. The `build` script runs
+1. **Import** the repo into Vercel.
+2. **Add a database.** Project → **Storage → Create Database → Neon (Postgres)**
+   and connect it to the project (all environments). This auto-injects
+   `POSTGRES_PRISMA_URL`, `POSTGRES_URL_NON_POOLING`, and friends.
+3. **Deploy.** The `build` script runs
    `prisma generate && prisma migrate deploy && next build`, so the schema is
    created automatically on the first deploy — no manual migration step.
-4. **Seed once** (optional, for demo data) against the production database:
+4. **Seed once** (optional, for demo data) against the production database.
+   Pull the prod env down, then seed:
    ```bash
-   # locally, with the production DIRECT_URL exported:
-   DATABASE_URL="<direct-url>" DIRECT_URL="<direct-url>" npm run db:seed
+   vercel env pull .env.production.local        # gets the Neon URLs
+   set -a; . ./.env.production.local; set +a     # load them into the shell
+   npm run db:seed
    ```
    Skip this if you'd rather start with an empty office.
 
