@@ -20,15 +20,15 @@ Built for the Mercator office hackathon. Deskly reimagines desk booking as a
   and plain-English recommendations — all computed from check-in data, no AI
   spend.
 
-## Run it
+## Run it locally
 
-Requires Node 18+ (built on Node 24).
+Requires **Node 18+** (built on Node 24) and **Docker** (for the local Postgres).
 
 ```bash
-cd deskly
-cp .env.example .env        # DATABASE_URL for the local SQLite db
-npm install
-npx prisma migrate deploy   # create the SQLite schema
+docker compose up -d        # start local Postgres (matches Neon/Vercel)
+cp .env.example .env        # DATABASE_URL + DIRECT_URL — defaults match docker-compose
+npm install                 # also runs `prisma generate`
+npx prisma migrate deploy   # create the schema
 npm run db:seed             # seed Mercator London + ~4 weeks of history
 npm run dev                 # http://localhost:3000
 ```
@@ -36,6 +36,30 @@ npm run dev                 # http://localhost:3000
 > Re-running `npm run db:seed` resets the demo data. The seed uses the wall
 > clock so today's "reserved, not yet checked in" desk always has a live
 > check-in window.
+
+No Docker? Point `DATABASE_URL` / `DIRECT_URL` in `.env` at any Postgres you
+like (a free Neon database works) and skip `docker compose up`.
+
+## Deploy to Vercel
+
+The app is built for Vercel + a serverless Postgres (Neon / Vercel Postgres).
+
+1. **Provision a database.** In the Vercel dashboard: **Storage → Create →
+   Postgres** (or create a Neon database and copy its connection strings).
+2. **Set environment variables** on the Vercel project (Settings → Environment
+   Variables):
+   - `DATABASE_URL` — the **pooled** connection string (host contains
+     `-pooler`). Used by the app at runtime.
+   - `DIRECT_URL` — the **direct** connection string. Used by `prisma migrate`.
+3. **Deploy.** Import the repo into Vercel and deploy. The `build` script runs
+   `prisma generate && prisma migrate deploy && next build`, so the schema is
+   created automatically on the first deploy — no manual migration step.
+4. **Seed once** (optional, for demo data) against the production database:
+   ```bash
+   # locally, with the production DIRECT_URL exported:
+   DATABASE_URL="<direct-url>" DIRECT_URL="<direct-url>" npm run db:seed
+   ```
+   Skip this if you'd rather start with an empty office.
 
 ## Demo path (5 minutes)
 
@@ -53,8 +77,9 @@ npm run dev                 # http://localhost:3000
 
 ## Stack
 
-Next.js 16 (App Router, Server Actions) · React 19 · Prisma + SQLite ·
-Tailwind v4 · react-rnd (editor) · Recharts (insights).
+Next.js 16 (App Router, Server Actions) · React 19 · Prisma + PostgreSQL
+(local Postgres via Docker, Neon/Vercel Postgres in prod) · Tailwind v4 ·
+react-rnd (editor) · Recharts (insights).
 
 ## Data model
 

@@ -1,14 +1,19 @@
 // Deskly — Mercator desk booking POC
-// SQLite + Prisma. Maps the four core entities (Premise, Bookable, Booking,
-// Booker) plus Zone (map geometry) and AppSettings (auto-release config).
+// PostgreSQL + Prisma. Maps the four core entities (Premise, Bookable,
+// Booking, Booker) plus Zone (map geometry) and AppSettings (auto-release
+// config). Runs on local Postgres (docker-compose) and Neon / Vercel Postgres
+// in production.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
+  // Pooled connection used by the app at runtime.
   url      = env("DATABASE_URL")
+  // Direct connection used by `prisma migrate` (Neon needs the non-pooled URL).
+  directUrl = env("DIRECT_URL")
 }
 
 model Premise {

@@ -4,6 +4,9 @@
 
 **Teams of 4 · 3 hours · review & awards the following week**
 
+> 🖥️ **Looking to run or deploy the Deskly app itself?** See **[DESKLY.md](./DESKLY.md)**
+> for local setup (Docker + Postgres) and Vercel deployment.
+
 ---
 
 ## Contents

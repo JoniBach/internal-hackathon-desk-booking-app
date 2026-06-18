@@ -2,15 +2,19 @@
 .env
 .next/
 .env.*
+!.env.example
 *.key
 secrets.*
+
+# Local SQLite database (the app now uses Postgres)
+*.db
+*.db-journal
 
 # Node
 node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
 
 # Python
 __pycache__/

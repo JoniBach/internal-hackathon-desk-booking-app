@@ -1,0 +1,24 @@
+# Local Postgres for Deskly development.
+# `docker compose up -d` gives you a database that matches the Neon/Vercel
+# Postgres used in production, so local and prod behave identically.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: deskly-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: deskly
+      POSTGRES_PASSWORD: deskly
+      POSTGRES_DB: deskly
+    ports:
+      - "5432:5432"
+    volumes:
+      - deskly-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U deskly -d deskly"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  deskly-pgdata:
