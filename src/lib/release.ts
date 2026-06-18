@@ -13,12 +13,17 @@ export async function sweepExpiredBookings(): Promise<number> {
 
   const reserved = await prisma.booking.findMany({
     where: { status: "RESERVED" },
-    select: { id: true, date: true, startTime: true },
+    select: { id: true, date: true, startTime: true, createdAt: true },
   });
 
   const expired = reserved.filter((b) => {
     const start = dateTimeOf(b.date, b.startTime).getTime();
-    return now > start + minutes * 60_000;
+    // The check-in grace window runs from the later of the booking's start
+    // time or when it was created — so a desk booked after its nominal start
+    // (e.g. an afternoon walk-in for a 09:00 slot) still gets the full window
+    // instead of being released the instant it's created.
+    const windowStart = Math.max(start, b.createdAt.getTime());
+    return now > windowStart + minutes * 60_000;
   });
 
   if (expired.length === 0) return 0;
